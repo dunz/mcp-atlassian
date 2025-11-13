@@ -2,21 +2,12 @@
 
 Atlassian 제품(Confluence, Jira)과 통합하기 위한 Model Context Protocol (MCP) 서버입니다. AI 어시스턴트가 Atlassian Cloud API와 상호작용하여 문서 관리, 검색, 내보내기 기능을 사용할 수 있게 합니다.
 
-> **🎉 최신 업데이트**: 안정성 개선 및 방어 로직 추가 완료! (2025-11-13)
->
-> - 20개 함수에 방어 로직 추가로 undefined 오류 완전 차단
-> - Confluence API 경로 11곳 수정 (404 오류 해결)
-> - 모든 도구 100% 정상 작동 확인
-
 ## 📋 목차
 
 - [주요 기능](#주요-기능)
-- [설치 방법](#설치-방법)
-- [MCP 설정](#mcp-설정)
-- [API 토큰 발급](#api-토큰-발급)
+- [빠른 시작](#빠른-시작)
 - [사용 가능한 도구](#사용-가능한-도구)
 - [사용 예시](#사용-예시)
-- [최근 개선 사항](#최근-개선-사항)
 - [문제 해결](#문제-해결)
 
 ## 주요 기능
@@ -42,87 +33,32 @@ Atlassian 제품(Confluence, Jira)과 통합하기 위한 Model Context Protocol
 - **사용자 관리**: 현재 사용자 정보 조회
 - **개인 대시보드**: 열린 이슈 및 스프린트 작업 확인
 
-## 설치 방법
+## 빠른 시작
 
-### 옵션 1: 로컬 클론 (권장)
+### 1. Atlassian API 토큰 발급
 
-```bash
-# 저장소 클론
-git clone https://github.com/dunz/mcp-atlassian.git
-cd mcp-atlassian
-
-# 의존성 설치
-npm install
-```
-
-### 옵션 2: GitHub에서 직접 설치
-
-```bash
-# GitHub에서 직접 설치
-npm install -g github:dunz/mcp-atlassian
-
-# 또는 프로젝트에 설치
-npm install github:dunz/mcp-atlassian
-```
-
-### 옵션 3: NPM 레지스트리
-
-```bash
-# 전역 설치
-npm install -g mcp-atlassian
-
-# 또는 로컬 설치
-npm install mcp-atlassian
-```
-
-## MCP 설정
-
-### 1. API 토큰 발급
-
-#### Atlassian API 토큰 생성
-
-1. [Atlassian 계정 설정](https://id.atlassian.com/manage-profile/security/api-tokens)에 로그인
+1. [Atlassian 보안 설정](https://id.atlassian.com/manage-profile/security/api-tokens)으로 이동
 2. "API 토큰 만들기" 클릭
-3. 토큰에 라벨을 지정하고 복사
-4. 이 토큰을 MCP 설정에 사용
+3. 토큰 라벨 입력 (예: "MCP Integration")
+4. 생성된 토큰을 복사 (한 번만 표시됩니다!)
 
-### 2. MCP 클라이언트 설정
+> ⚠️ **중요**: API 토큰은 비밀번호처럼 안전하게 보관하세요.
 
-#### Claude Desktop 설정 파일 위치
+### 2. MCP 설정 파일 찾기
 
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+**Claude Desktop**
 
-#### Cursor 설정 파일 위치
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
 
-- **모든 OS**: `~/.cursor/mcp.json`
+**Cursor**
 
-### 3. 설정 예시
+- 모든 OS: `~/.cursor/mcp.json`
 
-#### 옵션 A: Node로 직접 실행 (권장)
+### 3. 설정 파일 수정
 
-```json
-{
-  "mcpServers": {
-    "atlassian": {
-      "command": "node",
-      "args": [
-        "[Cloned Directory Absolute Path]/dist/index.js",
-        "--transport",
-        "stdio"
-      ],
-      "env": {
-        "ATLASSIAN_BASE_URL": "https://your-company.atlassian.net",
-        "ATLASSIAN_EMAIL": "your-email@company.com",
-        "ATLASSIAN_API_TOKEN": "YOUR_API_TOKEN_HERE"
-      }
-    }
-  }
-}
-```
-
-#### 옵션 B: NPX로 실행
+설정 파일을 열고 다음 내용을 추가하세요:
 
 ```json
 {
@@ -140,32 +76,24 @@ npm install mcp-atlassian
 }
 ```
 
-### 4. 설정 적용
+**설정값 설명:**
 
-1. 설정 파일을 저장합니다
-2. **Claude Desktop**: 앱을 완전히 종료하고 다시 시작
-3. **Cursor**: 앱을 재시작 (⌘+Q 후 다시 실행)
-4. 연결이 성공하면 도구 목록에 Atlassian 도구들이 표시됩니다
+- `ATLASSIAN_BASE_URL`: 회사의 Atlassian URL (끝에 `/` 제거)
+- `ATLASSIAN_EMAIL`: Atlassian 계정 이메일
+- `ATLASSIAN_API_TOKEN`: 1단계에서 생성한 API 토큰
+
+### 4. 앱 재시작
+
+- **Claude Desktop**: 앱을 완전히 종료하고 다시 시작
+- **Cursor**: `⌘+Q` (또는 `Ctrl+Q`) 후 다시 실행
 
 ### 5. 연결 확인
 
-AI 어시스턴트에게 다음과 같이 요청해보세요:
+AI 어시스턴트에게 다음과 같이 물어보세요:
 
 ```
-"Atlassian MCP가 연결되었는지 확인하고, 사용 가능한 도구 목록을 보여줘"
+"Atlassian MCP 서버가 연결되었는지 확인해줘"
 ```
-
-## API 토큰 발급
-
-### Atlassian API 토큰
-
-1. [Atlassian 보안 설정](https://id.atlassian.com/manage-profile/security/api-tokens)으로 이동
-2. "API 토큰 만들기" 클릭
-3. 토큰 라벨 입력 (예: "MCP Integration")
-4. 토큰 복사 (한 번만 표시됩니다!)
-5. MCP 설정에 붙여넣기
-
-> ⚠️ **중요**: API 토큰은 비밀번호와 동일하게 취급하세요. 절대 코드나 공개 저장소에 포함하지 마세요.
 
 ## 사용 가능한 도구
 
@@ -263,217 +191,50 @@ AI 어시스턴트에게 다음과 같이 요청해보세요:
 "type = page AND creator = currentUser() 조건으로 Confluence 페이지를 검색해줘"
 ```
 
-## 최근 개선 사항
-
-### 🎉 2025-11-13 업데이트
-
-#### 1. 안정성 대폭 향상
-
-- **20개 함수에 방어 로직 추가**
-  - 모든 `.map()` 호출 전 undefined/null 체크
-  - `Cannot read properties of undefined` 오류 완전 차단
-  - 상세한 에러 메시지로 디버깅 용이
-
-#### 2. Confluence API 경로 수정 (11곳)
-
-- **문제**: `/api/...` 경로로 404 오류 발생
-- **해결**: 모든 경로를 `/wiki/rest/api/...`로 수정
-- **영향받은 함수**:
-  - `searchConfluencePages`
-  - `getConfluenceSpace`
-  - `listConfluencePageChildren`
-  - `listConfluencePageAncestors`
-  - `getConfluenceUser`
-  - `findConfluenceUsers`
-  - `uploadConfluenceAttachment`
-  - 기타 사용자 관련 함수들
-
-#### 3. Jira API 개선 (11개 함수)
-
-- **GET 메서드 유지**: 안정적인 `/rest/api/3/search` 엔드포인트 사용
-- **방어 로직 추가**:
-  - `listJiraProjects` - 프로젝트 목록 배열 체크
-  - `listAgileBoards` - 보드 목록 values 체크
-  - `listJiraSprints` - 스프린트 목록 values 체크
-  - `getJiraSprintDetails` - 이슈 목록 조건부 처리
-  - 기타 검색 함수 7개
-
-#### 4. 테스트 결과
-
-- ✅ **15개 읽기 도구 테스트 완료**
-- ✅ **성공률 100%**
-- ✅ **모든 API 경로 정상 작동**
-- ✅ **방어 로직 완벽 작동**
-
-### 변경 전후 비교
-
-#### Before (오류 발생)
-
-```javascript
-// ❌ 방어 로직 없음
-const results = response.data.results.map(page => ({...}));
-
-// ❌ 잘못된 API 경로
-await this.client.get('/api/content/search', {...});
-```
-
-#### After (안정적)
-
-```javascript
-// ✅ 방어 로직 추가
-if (!response.data || !response.data.results) {
-    console.error('Unexpected API response structure:', ...);
-    return { content: [{ type: 'text', text: 'Error message' }], isError: true };
-}
-const results = response.data.results.map(page => ({...}));
-
-// ✅ 올바른 API 경로
-await this.client.get('/wiki/rest/api/content/search', {...});
-```
-
 ## 문제 해결
 
 ### 연결이 안 될 때
 
-1. **API 토큰 확인**
+1. **API 토큰 재확인**
 
-   ```bash
-   # 환경 변수가 설정되었는지 확인
-   echo $ATLASSIAN_API_TOKEN
-   ```
+   - Base URL 형식: `https://your-company.atlassian.net` (끝에 `/` 제거)
+   - 이메일과 토큰이 정확한지 확인
+   - 토큰에 필요한 권한이 있는지 확인
 
-2. **Base URL 확인**
+2. **앱 완전 재시작**
 
-   - `https://your-company.atlassian.net` 형식이어야 함
-   - 끝에 `/`를 붙이지 마세요
-
-3. **클라이언트 재시작**
-   - Claude Desktop: 완전 종료 후 재시작
+   - Claude Desktop: 앱을 완전히 종료하고 다시 시작
    - Cursor: `⌘+Q` 후 재실행
 
-### 404 오류가 발생할 때
-
-- **최신 버전 확인**: 2025-11-13 이후 버전 사용
-- **경로 수정 확인**: 모든 Confluence API가 `/wiki/rest/api/` 사용
-- **로그 확인**: 오류 메시지에서 상세 정보 확인
-
-### undefined 오류가 발생할 때
-
-- **최신 버전 확인**: 모든 방어 로직이 추가된 버전 사용
-- **응답 구조 확인**: 오류 메시지에 응답 구조가 표시됨
+3. **설정 파일 확인**
+   - JSON 형식이 올바른지 확인 (쉼표, 중괄호 등)
+   - 환경 변수 이름이 정확한지 확인
 
 ### 성능이 느릴 때
 
-1. **페이지 크기 제한**
-
-   ```
-   "최대 10개의 결과만 보여줘"
-   ```
-
-2. **특정 스페이스로 제한**
-
-   ```
-   "bizgrowthservice 스페이스에서만 검색해줘"
-   ```
-
-3. **날짜 범위 제한**
-   ```
-   "최근 1주일 이내의 이슈만 보여줘"
-   ```
-
-## 개발
-
-```bash
-# TypeScript 컴파일러를 watch 모드로 실행
-npm run dev
-
-# 프로덕션 빌드
-npm run build
-
-# 린터 실행
-npm run lint
-
-# 테스트 실행
-npm test
-```
-
-## 프로젝트 구조
+검색 범위를 좁히면 속도가 향상됩니다:
 
 ```
-mcp-atlassian/
-├── src/
-│   ├── index.ts                 # 메인 서버 진입점
-│   ├── types/                   # TypeScript 타입 정의
-│   ├── confluence/
-│   │   ├── handlers.ts          # Confluence API 핸들러
-│   │   └── tools.ts             # 도구 정의
-│   ├── jira/
-│   │   ├── handlers.ts          # Jira API 핸들러
-│   │   └── tools.ts             # 도구 정의
-│   └── utils/
-│       ├── http-client.ts       # Axios HTTP 클라이언트
-│       ├── content-converter.ts # Markdown ↔ Storage 변환
-│       └── export-converter.ts  # HTML/Markdown 내보내기
-├── dist/                        # 컴파일된 JavaScript
-├── package.json
-└── tsconfig.json
+"최대 10개의 결과만 보여줘"
+"DEV 스페이스에서만 검색해줘"
+"최근 1주일 이내의 이슈만 보여줘"
 ```
 
-## 보안 주의사항
+### 기타 문제
 
-- API 토큰은 환경 변수에 저장, 코드에 포함하지 마세요
-- API 토큰을 사용한 Basic Authentication 사용 (비밀번호 아님)
-- 모든 요청은 HTTPS로 전송
-- Atlassian Cloud만 지원 (Server/Data Center 미지원)
+- GitHub 저장소에 이슈를 생성해주세요: [Issues](https://github.com/dunz/mcp-atlassian/issues)
+- Atlassian API 문서: [Developer Docs](https://developer.atlassian.com/cloud/)
 
 ## 제한사항
 
-- 안전을 위해 삭제 작업은 구현되지 않음
-- PDF 내보내기는 브라우저 변환 필요 (HTML → 인쇄 → PDF)
-- 일부 Confluence 매크로는 Markdown으로 완벽하게 변환되지 않을 수 있음
-- Atlassian Cloud API 속도 제한 적용
-
-## 기여하기
-
-기여를 환영합니다! Pull Request를 자유롭게 제출해주세요.
-
-### 기여 방법
-
-1. 이 저장소를 Fork
-2. 기능 브랜치 생성 (`git checkout -b feature/amazing-feature`)
-3. 변경사항 커밋 (`git commit -m 'feat: Add amazing feature'`)
-4. 브랜치에 푸시 (`git push origin feature/amazing-feature`)
-5. Pull Request 생성
+- Atlassian Cloud만 지원 (Server/Data Center 미지원)
+- 안전을 위해 삭제 작업은 지원하지 않음
+- 일부 Confluence 매크로는 Markdown 변환 시 제한적
+- Atlassian Cloud API 속도 제한이 적용됨
 
 ## 라이선스
 
-MIT License - 자세한 내용은 LICENSE 파일 참조
-
-## 지원
-
-문제 및 질문:
-
-- GitHub 저장소에 이슈 생성
-- API 관련 질문은 Atlassian API 문서 참조
-- 프로토콜 관련 질문은 MCP 문서 검토
-
-## 감사의 말
-
-다음을 사용하여 구축:
-
-- [Model Context Protocol (MCP)](https://modelcontextprotocol.io)
-- [Atlassian REST APIs](https://developer.atlassian.com/cloud/)
-- TypeScript, Node.js, Axios
-
-## 변경 로그
-
-### v1.1.0 (2025-11-13)
-
-- 🎉 안정성 대폭 향상
-- ✅ 20개 함수에 방어 로직 추가
-- 🔧 Confluence API 경로 11곳 수정
-- 🔧 Jira API 방어 로직 추가
-- ✅ 모든 도구 100% 테스트 완료
+MIT License
 
 ---
 
