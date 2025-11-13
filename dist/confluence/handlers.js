@@ -10,7 +10,7 @@ export class ConfluenceHandlers {
         this.client = client;
     }
     async _getCurrentUser() {
-        const response = await this.client.get('/api/user/current');
+        const response = await this.client.get('/wiki/rest/api/user/current');
         return response.data;
     }
     async readConfluencePage(args) {
@@ -100,6 +100,19 @@ export class ConfluenceHandlers {
                     expand,
                 },
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const results = response.data.results.map((page) => ({
                 id: page.id,
                 title: page.title,
@@ -142,6 +155,19 @@ export class ConfluenceHandlers {
                 params.type = typeValidation.sanitizedValue;
             }
             const response = await this.client.get('/wiki/rest/api/space', { params });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const results = response.data.results.map((space) => ({
                 id: space.id,
                 key: space.key,
@@ -195,6 +221,19 @@ export class ConfluenceHandlers {
             const response = await this.client.get(`/wiki/rest/api/content/${pageIdValidation.sanitizedValue}/child/attachment`, {
                 params,
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const attachments = response.data.results.map((attachment) => ({
                 id: attachment.id,
                 title: attachment.title,
@@ -895,7 +934,7 @@ export class ConfluenceHandlers {
     }
     async getConfluenceCurrentUser() {
         try {
-            const response = await this.client.get('/api/user/current');
+            const response = await this.client.get('/wiki/rest/api/user/current');
             const user = response.data;
             const result = {
                 accountId: user.accountId,
@@ -923,7 +962,7 @@ export class ConfluenceHandlers {
             const spaceKeyValidation = validateString(spaceKey, 'spaceKey', { required: true });
             if (!spaceKeyValidation.isValid)
                 return createValidationError(spaceKeyValidation.errors, 'getConfluenceSpace', 'confluence');
-            const response = await this.client.get(`/api/space/${spaceKeyValidation.sanitizedValue}`, {
+            const response = await this.client.get(`/wiki/rest/api/space/${spaceKeyValidation.sanitizedValue}`, {
                 params: { expand },
             });
             const space = response.data;
@@ -957,13 +996,26 @@ export class ConfluenceHandlers {
             const paginationValidation = validatePagination(start, limit);
             if (!paginationValidation.isValid)
                 return createValidationError(paginationValidation.errors, 'listConfluencePageChildren', 'confluence');
-            const response = await this.client.get(`/api/content/${pageIdValidation.sanitizedValue}/child/page`, {
+            const response = await this.client.get(`/wiki/rest/api/content/${pageIdValidation.sanitizedValue}/child/page`, {
                 params: {
                     limit: paginationValidation.sanitizedValue.maxResults,
                     start: paginationValidation.sanitizedValue.startAt,
                     expand,
                 },
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const children = response.data.results.map((page) => ({
                 id: page.id,
                 title: page.title,
@@ -997,7 +1049,7 @@ export class ConfluenceHandlers {
             if (!pageIdValidation.isValid)
                 return createValidationError(pageIdValidation.errors, 'listConfluencePageAncestors', 'confluence');
             // First get the page with ancestors expanded
-            const response = await this.client.get(`/api/content/${pageIdValidation.sanitizedValue}`, {
+            const response = await this.client.get(`/wiki/rest/api/content/${pageIdValidation.sanitizedValue}`, {
                 params: {
                     expand: 'ancestors',
                 },
@@ -1049,7 +1101,7 @@ export class ConfluenceHandlers {
                 form.append('comment', comment);
             }
             form.append('minorEdit', String(minorEdit));
-            const response = await this.client.post(`/api/content/${pageId}/child/attachment`, form, {
+            const response = await this.client.post(`/wiki/rest/api/content/${pageId}/child/attachment`, form, {
                 headers: {
                     ...form.getHeaders(),
                     'X-Atlassian-Token': 'no-check', // Required for file uploads
@@ -1097,7 +1149,7 @@ export class ConfluenceHandlers {
                 cql = `space = ${spaceKey} AND (${cql})`;
             }
             cql += ' ORDER BY lastmodified DESC';
-            const response = await this.client.get('/api/content/search', {
+            const response = await this.client.get('/wiki/rest/api/content/search', {
                 params: {
                     cql,
                     limit: Math.min(limit, 100),
@@ -1105,6 +1157,19 @@ export class ConfluenceHandlers {
                     expand: 'space,version',
                 },
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const pages = response.data.results.map((page) => ({
                 id: page.id,
                 title: page.title,
@@ -1152,7 +1217,7 @@ export class ConfluenceHandlers {
                 cql = `space = ${spaceKey} AND ${cql}`;
             }
             cql += ' ORDER BY lastmodified DESC';
-            const response = await this.client.get('/api/content/search', {
+            const response = await this.client.get('/wiki/rest/api/content/search', {
                 params: {
                     cql,
                     limit: Math.min(limit, 100),
@@ -1160,6 +1225,19 @@ export class ConfluenceHandlers {
                     expand: 'space,version',
                 },
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const pages = response.data.results.map((page) => ({
                 id: page.id,
                 title: page.title,
@@ -1207,7 +1285,7 @@ export class ConfluenceHandlers {
             let userResponse;
             if (accountId) {
                 try {
-                    userResponse = await this.client.get(`/api/user`, {
+                    userResponse = await this.client.get(`/wiki/rest/api/user`, {
                         params: { accountId },
                     });
                 }
@@ -1217,7 +1295,7 @@ export class ConfluenceHandlers {
             }
             // If not found by accountId, search for user
             if (!userResponse && (username || email)) {
-                const searchResponse = await this.client.get('/api/search/user', {
+                const searchResponse = await this.client.get('/wiki/rest/api/search/user', {
                     params: {
                         cql: username ? `user.fullname ~ "${username}"` : `user.email = "${email}"`,
                         limit: 1,
@@ -1297,7 +1375,7 @@ export class ConfluenceHandlers {
                 cql = `space = ${spaceKey} AND ${cql}`;
             }
             cql += ' ORDER BY lastmodified DESC';
-            const response = await this.client.get('/api/content/search', {
+            const response = await this.client.get('/wiki/rest/api/content/search', {
                 params: {
                     cql,
                     limit: Math.min(limit, 100),
@@ -1305,6 +1383,19 @@ export class ConfluenceHandlers {
                     expand: 'space,version,history.lastUpdated',
                 },
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const pages = response.data.results.map((page) => ({
                 id: page.id,
                 title: page.title,
@@ -1379,7 +1470,7 @@ export class ConfluenceHandlers {
                 cql += ` AND created <= ${endDate}`;
             }
             cql += ' ORDER BY created DESC';
-            const response = await this.client.get('/api/content/search', {
+            const response = await this.client.get('/wiki/rest/api/content/search', {
                 params: {
                     cql,
                     limit: Math.min(limit, 100),
@@ -1387,6 +1478,19 @@ export class ConfluenceHandlers {
                     expand: 'space,version,history.createdDate',
                 },
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const pages = response.data.results.map((page) => ({
                 id: page.id,
                 title: page.title,
@@ -1453,7 +1557,7 @@ export class ConfluenceHandlers {
                 cql = `space = ${spaceKey} AND ${cql}`;
             }
             cql += ' ORDER BY created DESC';
-            const response = await this.client.get('/api/content/search', {
+            const response = await this.client.get('/wiki/rest/api/content/search', {
                 params: {
                     cql,
                     limit: Math.min(limit, 100),
@@ -1461,6 +1565,19 @@ export class ConfluenceHandlers {
                     expand: 'container,space,version,metadata.mediaType,extensions.fileSize',
                 },
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.results) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const attachments = response.data.results.map((attachment) => ({
                 id: attachment.id,
                 title: attachment.title,

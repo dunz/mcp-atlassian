@@ -79,9 +79,22 @@ export class JiraHandlers {
                     jql: jqlValidation.sanitizedValue,
                     maxResults: paginationValidation.sanitizedValue.maxResults,
                     startAt: paginationValidation.sanitizedValue.startAt,
-                    fields,
+                    fields: fields,
                 },
             });
+            
+            // 방어 로직 추가: issues 배열이 없을 경우 처리
+            if (!response.data || !response.data.issues) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const issues = response.data.issues.map((issue) => ({
                 id: issue.id,
                 key: issue.key,
@@ -119,6 +132,17 @@ export class JiraHandlers {
             const response = await this.client.get('/rest/api/3/project', {
                 params: { expand },
             });
+            // 방어 로직 추가
+            if (!response.data || !Array.isArray(response.data)) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
             const projects = response.data.map((project) => ({
                 id: project.id,
                 key: project.key,
@@ -329,6 +353,17 @@ export class JiraHandlers {
                 params.type = type;
             }
             const response = await this.client.get('/rest/agile/1.0/board', { params });
+            // 방어 로직 추가
+            if (!response.data || !response.data.values) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
             const boards = response.data.values.map((board) => ({
                 id: board.id,
                 name: board.name,
@@ -377,6 +412,17 @@ export class JiraHandlers {
                 params.state = stateValidation.sanitizedValue;
             }
             const response = await this.client.get(`/rest/agile/1.0/board/${boardIdValidation.sanitizedValue}/sprint`, { params });
+            // 방어 로직 추가
+            if (!response.data || !response.data.values) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
             const sprints = response.data.values.map((sprint) => ({
                 id: sprint.id,
                 name: sprint.name,
@@ -433,13 +479,16 @@ export class JiraHandlers {
                 const issuesResponse = await this.client.get(`/rest/agile/1.0/sprint/${sprintId}/issue`, {
                     params: { maxResults: 100 },
                 });
-                result.issueCount = issuesResponse.data.total;
-                result.issues = issuesResponse.data.issues.map((issue) => ({
-                    key: issue.key,
-                    summary: issue.fields.summary,
-                    status: issue.fields.status?.name,
-                    assignee: issue.fields.assignee?.displayName,
-                }));
+                // 방어 로직 추가
+                if (issuesResponse.data && issuesResponse.data.issues) {
+                    result.issueCount = issuesResponse.data.total;
+                    result.issues = issuesResponse.data.issues.map((issue) => ({
+                        key: issue.key,
+                        summary: issue.fields.summary,
+                        status: issue.fields.status?.name,
+                        assignee: issue.fields.assignee?.displayName,
+                    }));
+                }
             }
             catch (issuesError) {
                 // If we can't get issues, continue without them
@@ -495,13 +544,24 @@ export class JiraHandlers {
                 }
             }
             // Search for issues
-            const response = await this.client.get('/rest/api/3/search', {
-                params: {
-                    jql,
-                    maxResults: 100,
-                    fields: 'summary,status,priority,issuetype,created,updated,description,components,labels,sprint',
-                },
+            const response = await this.client.post('/rest/api/3/search', {
+                jql,
+                maxResults: 100,
+                fields: ['summary', 'status', 'priority', 'issuetype', 'created', 'updated', 'description', 'components', 'labels', 'sprint'],
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.issues) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const issues = response.data.issues.map((issue) => ({
                 key: issue.key,
                 summary: issue.fields.summary,
@@ -548,13 +608,24 @@ export class JiraHandlers {
                 jql = `project in (${projectFilter}) AND ${jql}`;
             }
             jql += ' ORDER BY priority DESC, updated DESC';
-            const response = await this.client.get('/rest/api/3/search', {
-                params: {
-                    jql,
-                    maxResults: Math.min(maxResults, 100),
-                    fields: 'summary,status,priority,issuetype,created,updated,project,components,labels,duedate',
-                },
+            const response = await this.client.post('/rest/api/3/search', {
+                jql,
+                maxResults: Math.min(maxResults, 100),
+                fields: ['summary', 'status', 'priority', 'issuetype', 'created', 'updated', 'project', 'components', 'labels', 'duedate'],
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.issues) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const issues = response.data.issues.map((issue) => ({
                 key: issue.key,
                 summary: issue.fields.summary,
@@ -769,14 +840,25 @@ export class JiraHandlers {
             else {
                 throw new Error('Invalid search criteria provided');
             }
-            const response = await this.client.get('/rest/api/3/search', {
-                params: {
-                    jql,
-                    maxResults: Math.min(maxResults, 100),
-                    startAt,
-                    fields: 'summary,status,priority,issuetype,assignee,reporter,created,updated,project',
-                },
+            const response = await this.client.post('/rest/api/3/search', {
+                jql,
+                maxResults: Math.min(maxResults, 100),
+                startAt,
+                fields: ['summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter', 'created', 'updated', 'project'],
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.issues) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const issues = response.data.issues.map((issue) => ({
                 key: issue.key,
                 summary: issue.fields.summary,
@@ -900,14 +982,25 @@ export class JiraHandlers {
                 jqlBuilder.dateRange('created', dateValidation.sanitizedValue.startDate, dateValidation.sanitizedValue.endDate);
             }
             const jql = jqlBuilder.build() + ' ORDER BY created DESC';
-            const response = await this.client.get('/rest/api/3/search', {
-                params: {
-                    jql,
-                    maxResults: paginationValidation.sanitizedValue.maxResults,
-                    startAt: paginationValidation.sanitizedValue.startAt,
-                    fields: 'summary,status,priority,issuetype,assignee,reporter,created,updated,project,resolution',
-                },
+            const response = await this.client.post('/rest/api/3/search', {
+                jql,
+                maxResults: paginationValidation.sanitizedValue.maxResults,
+                startAt: paginationValidation.sanitizedValue.startAt,
+                fields: ['summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter', 'created', 'updated', 'project', 'resolution'],
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.issues) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const issues = response.data.issues.map((issue) => ({
                 key: issue.key,
                 summary: issue.fields.summary,
@@ -982,15 +1075,26 @@ export class JiraHandlers {
                 jql = `project in (${projectFilter}) AND ${jql}`;
             }
             jql += ' ORDER BY updated DESC';
-            const response = await this.client.get('/rest/api/3/search', {
-                params: {
-                    jql,
-                    maxResults: Math.min(maxResults, 100),
-                    startAt,
-                    fields: 'summary,status,priority,issuetype,assignee,reporter,created,updated,project,comment,worklog',
-                    expand: 'changelog',
-                },
+            const response = await this.client.post('/rest/api/3/search', {
+                jql,
+                maxResults: Math.min(maxResults, 100),
+                startAt,
+                fields: ['summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter', 'created', 'updated', 'project', 'comment', 'worklog'],
+                expand: ['changelog'],
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.issues) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             // Process issues and extract activity
             const activity = [];
             for (const issue of response.data.issues) {
@@ -1160,15 +1264,26 @@ export class JiraHandlers {
             }
             const jql = jqlBuilder.build();
             // Use batch API call with worklog expansion for optimal performance
-            const response = await this.client.get('/rest/api/3/search', {
-                params: {
-                    jql,
-                    maxResults: paginationValidation.sanitizedValue.maxResults,
-                    startAt: paginationValidation.sanitizedValue.startAt,
-                    fields: 'summary,project,worklog',
-                    expand: 'worklog', // Efficient batch loading of worklogs
-                },
+            const response = await this.client.post('/rest/api/3/search', {
+                jql,
+                maxResults: paginationValidation.sanitizedValue.maxResults,
+                startAt: paginationValidation.sanitizedValue.startAt,
+                fields: ['summary', 'project', 'worklog'],
+                expand: ['worklog'], // Efficient batch loading of worklogs
             });
+            
+            // 방어 로직 추가
+            if (!response.data || !response.data.issues) {
+                console.error('Unexpected API response structure:', JSON.stringify(response.data, null, 2));
+                return {
+                    content: [{
+                        type: 'text',
+                        text: `Unexpected API response. Response structure: ${JSON.stringify(response.data, null, 2)}`
+                    }],
+                    isError: true,
+                };
+            }
+            
             const worklogs = [];
             let totalTimeSpent = 0;
             for (const issue of response.data.issues) {
