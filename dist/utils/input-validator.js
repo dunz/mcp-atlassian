@@ -175,7 +175,7 @@ export function validateString(value, fieldName, options = {}) {
     const opts = {
         required: false,
         minLength: 0,
-        maxLength: 1000,
+        maxLength: 100000,  // Increased from 1000 to support longer Confluence content
         allowEmpty: false,
         ...options,
     };
