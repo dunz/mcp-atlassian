@@ -74,7 +74,7 @@ export class JiraHandlers {
             if (!paginationValidation.isValid) {
                 return createValidationError(paginationValidation.errors, 'searchJiraIssues', 'jira');
             }
-            const response = await this.client.get('/rest/api/3/search', {
+            const response = await this.client.get('/rest/api/3/search/jql', {
                 params: {
                     jql: jqlValidation.sanitizedValue,
                     maxResults: paginationValidation.sanitizedValue.maxResults,
@@ -544,10 +544,12 @@ export class JiraHandlers {
                 }
             }
             // Search for issues
-            const response = await this.client.post('/rest/api/3/search', {
-                jql,
-                maxResults: 100,
-                fields: ['summary', 'status', 'priority', 'issuetype', 'created', 'updated', 'description', 'components', 'labels', 'sprint'],
+            const response = await this.client.get('/rest/api/3/search/jql', {
+                params: {
+                    jql,
+                    maxResults: 100,
+                    fields: 'summary,status,priority,issuetype,created,updated,description,components,labels,sprint',
+                },
             });
             
             // 방어 로직 추가
@@ -608,10 +610,12 @@ export class JiraHandlers {
                 jql = `project in (${projectFilter}) AND ${jql}`;
             }
             jql += ' ORDER BY priority DESC, updated DESC';
-            const response = await this.client.post('/rest/api/3/search', {
-                jql,
-                maxResults: Math.min(maxResults, 100),
-                fields: ['summary', 'status', 'priority', 'issuetype', 'created', 'updated', 'project', 'components', 'labels', 'duedate'],
+            const response = await this.client.get('/rest/api/3/search/jql', {
+                params: {
+                    jql,
+                    maxResults: Math.min(maxResults, 100),
+                    fields: 'summary,status,priority,issuetype,created,updated,project,components,labels,duedate',
+                },
             });
             
             // 방어 로직 추가
@@ -840,11 +844,13 @@ export class JiraHandlers {
             else {
                 throw new Error('Invalid search criteria provided');
             }
-            const response = await this.client.post('/rest/api/3/search', {
-                jql,
-                maxResults: Math.min(maxResults, 100),
-                startAt,
-                fields: ['summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter', 'created', 'updated', 'project'],
+            const response = await this.client.get('/rest/api/3/search/jql', {
+                params: {
+                    jql,
+                    maxResults: Math.min(maxResults, 100),
+                    startAt,
+                    fields: 'summary,status,priority,issuetype,assignee,reporter,created,updated,project',
+                },
             });
             
             // 방어 로직 추가
@@ -982,11 +988,13 @@ export class JiraHandlers {
                 jqlBuilder.dateRange('created', dateValidation.sanitizedValue.startDate, dateValidation.sanitizedValue.endDate);
             }
             const jql = jqlBuilder.build() + ' ORDER BY created DESC';
-            const response = await this.client.post('/rest/api/3/search', {
-                jql,
-                maxResults: paginationValidation.sanitizedValue.maxResults,
-                startAt: paginationValidation.sanitizedValue.startAt,
-                fields: ['summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter', 'created', 'updated', 'project', 'resolution'],
+            const response = await this.client.get('/rest/api/3/search/jql', {
+                params: {
+                    jql,
+                    maxResults: paginationValidation.sanitizedValue.maxResults,
+                    startAt: paginationValidation.sanitizedValue.startAt,
+                    fields: 'summary,status,priority,issuetype,assignee,reporter,created,updated,project,resolution',
+                },
             });
             
             // 방어 로직 추가
@@ -1075,12 +1083,14 @@ export class JiraHandlers {
                 jql = `project in (${projectFilter}) AND ${jql}`;
             }
             jql += ' ORDER BY updated DESC';
-            const response = await this.client.post('/rest/api/3/search', {
-                jql,
-                maxResults: Math.min(maxResults, 100),
-                startAt,
-                fields: ['summary', 'status', 'priority', 'issuetype', 'assignee', 'reporter', 'created', 'updated', 'project', 'comment', 'worklog'],
-                expand: ['changelog'],
+            const response = await this.client.get('/rest/api/3/search/jql', {
+                params: {
+                    jql,
+                    maxResults: Math.min(maxResults, 100),
+                    startAt,
+                    fields: 'summary,status,priority,issuetype,assignee,reporter,created,updated,project,comment,worklog',
+                    expand: 'changelog',
+                },
             });
             
             // 방어 로직 추가
@@ -1264,12 +1274,14 @@ export class JiraHandlers {
             }
             const jql = jqlBuilder.build();
             // Use batch API call with worklog expansion for optimal performance
-            const response = await this.client.post('/rest/api/3/search', {
-                jql,
-                maxResults: paginationValidation.sanitizedValue.maxResults,
-                startAt: paginationValidation.sanitizedValue.startAt,
-                fields: ['summary', 'project', 'worklog'],
-                expand: ['worklog'], // Efficient batch loading of worklogs
+            const response = await this.client.get('/rest/api/3/search/jql', {
+                params: {
+                    jql,
+                    maxResults: paginationValidation.sanitizedValue.maxResults,
+                    startAt: paginationValidation.sanitizedValue.startAt,
+                    fields: 'summary,project,worklog',
+                    expand: 'worklog', // Efficient batch loading of worklogs
+                },
             });
             
             // 방어 로직 추가
