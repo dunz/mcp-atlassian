@@ -108,7 +108,7 @@ npm install mcp-atlassian
     "atlassian": {
       "command": "node",
       "args": [
-        "[Cloned Directory]/dist/index.js",
+        "[Cloned Directory Absolute Path]/dist/index.js",
         "--transport",
         "stdio"
       ],
