@@ -34,11 +34,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Vijay-Duke/mcp-atlassian.git"
+    "url": "git+https://github.com/dunz/mcp-atlassian.git"
   },
-  "homepage": "https://github.com/Vijay-Duke/mcp-atlassian#readme",
+  "homepage": "https://github.com/dunz/mcp-atlassian#readme",
   "bugs": {
-    "url": "https://github.com/Vijay-Duke/mcp-atlassian/issues"
+    "url": "https://github.com/dunz/mcp-atlassian/issues"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.16.0",
